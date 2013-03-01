@@ -164,7 +164,7 @@ Apache::LogFormat::Compiler - Compile LogFormat to perl-code
 
 =head1 DESCRIPTION
 
-Compile LogFormat to perl-code. For faster generating log_line.
+Compile LogFormat to perl-code. For faster generating access_log line.
 
 B<THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE>.
 
