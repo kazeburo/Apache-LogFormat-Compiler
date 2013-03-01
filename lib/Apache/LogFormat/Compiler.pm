@@ -5,24 +5,23 @@ use warnings;
 use 5.008005;
 use Carp;
 use POSIX ();
+use Time::Local qw//;
 use Plack::Util;
 
 our $VERSION = '0.01';
 
 # copy from Plack::Middleware::AccessLog
-
-my %formats = (
+our %formats = (
     common => '%h %l %u %t "%r" %>s %b',
     combined => '%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i"',
 );
 
-my $tzoffset = POSIX::strftime("%z", localtime) !~ /^[+-]\d{4}$/ && do {
-    require Time::Local;
-    my @t = localtime;
-    my $seconds = Time::Local::timegm(@t) - Time::Local::timelocal(@t);
-    my $min_offset = int($seconds / 60);
-    sprintf '%+03d%02u', $min_offset / 60, $min_offset % 60;
-};
+my $tzoffset = POSIX::strftime("%z", localtime);
+if ( $tzoffset !~ /^[+-]\d{4}$/ ) {
+    my @t = localtime(time);
+    my $s = Time::Local::timegm(@t) - Time::Local::timelocal(@t);
+    $tzoffset = sprintf '%+03d%02u', int($s/3600), $s % 3600;
+}
 
 sub _strftime {
     my ($fmt, @time) = @_;
@@ -55,7 +54,7 @@ my $block_handler = sub {
         $block =~ s/-/_/g;
         $cb =  q!_string($env->{"HTTP_" . uc('!.$block.q!')})!;
     } elsif ($type eq 'o') {
-        $cb =  q!_string(scalar $h->get('!.$block.q!'))!;
+        $cb =  q!_string(scalar Plack::Util::headers($res->[1])->get('!.$block.q!'))!;
     } elsif ($type eq 't') {
         $cb =  q!"[" . _strftime('!.$block.q!', localtime) . "]"!;
     } else {
@@ -71,7 +70,7 @@ our %char_handler = (
     h => q!($env->{REMOTE_ADDR} || '-')!,
     l => q!'-'!,
     u => q!($env->{REMOTE_USER} || '-')!,
-    t => q!"[" . _strftime('%d/%b/%Y:%H:%M:%S %z', localtime) . "]"!,
+    t => q!"[" . $t . "]"!,
     r => q!_safe($env->{REQUEST_METHOD}) . " " . _safe($env->{REQUEST_URI}) .
                        " " . $env->{SERVER_PROTOCOL}!,
     s => q!$res->[0]!,
@@ -118,13 +117,18 @@ sub compile {
              \%(?:[<>])?([a-zA-Z\%])
         )
     ! $1 ? $block_handler->($1, $2) : $char_handler->($3) !egx;
+
+    my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
+    my $tz = $tzoffset;
     $fmt = q|sub {
         my ($env,$res,$length,$time) = @_;
-        my $h = Plack::Util::headers($res->[1]);
+        my @lt = localtime;
+        my $t = sprintf '%02d/%s/%04d:%02d:%02d:%02d %s', $lt[3], $abbr[$lt[4]], $lt[5]+1900, 
+          $lt[2], $lt[1], $lt[0], $tz;
         q!| . $fmt . q|!
     }|;
     $self->{log_handler_code} = $fmt;
-    $self->{log_handler} = eval $fmt;
+    $self->{log_handler} = eval $fmt; ## no critic
 }
 
 sub log_line {
@@ -147,7 +151,10 @@ Apache::LogFormat::Compiler - Compile LogFormat to perl-code
 
   use Apache::LogFormat::Compiler;
 
-  my $log_handler = Apache::LogFormat::Compiler->new();
+  my $log_handler = Apache::LogFormat::Compiler->new("combined");
+  # my $log_handler = Apache::LogFormat::Compiler->new(
+  #     '%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i"'
+  # );
   my $log = $log_handler->log_line(
       $env,
       $res,

@@ -41,9 +41,9 @@ cmpthese(timethese(0,{
 
 __END__
 Benchmark: running compilelog, log for at least 3 CPU seconds...
-compilelog:  3 wallclock secs ( 3.14 usr +  0.08 sys =  3.22 CPU) @ 8482.30/s (n=27313)
-       log:  3 wallclock secs ( 3.18 usr +  0.00 sys =  3.18 CPU) @ 3226.73/s (n=10261)
-             Rate        log compilelog
-log        3227/s         --       -62%
-compilelog 8482/s       163%         --
+compilelog:  3 wallclock secs ( 3.03 usr +  0.19 sys =  3.22 CPU) @ 25447.20/s (n=81940)
+       log:  3 wallclock secs ( 3.17 usr +  0.01 sys =  3.18 CPU) @ 3226.73/s (n=10261)
+              Rate        log compilelog
+log         3227/s         --       -87%
+compilelog 25447/s       689%         --
 

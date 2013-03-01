@@ -91,3 +91,5 @@ perltidy.ERR$
 ^MANIFEST\.SKIP
 \B\.gitignore
 \.bak$
+logbench\.pl$
+
