@@ -1,4 +1,7 @@
 Revision history for Perl extension Apache::LogFormat::Compiler
 
+0.02    Fri Mar  1 23:32:11 2013
+    - added $time option to log_line. the request was recieved 
+
 0.01    Fri Mar  1 15:00:11 2013
     - original version

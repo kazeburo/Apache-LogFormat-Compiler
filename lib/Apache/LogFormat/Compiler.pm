@@ -8,7 +8,7 @@ use POSIX ();
 use Time::Local qw//;
 use Plack::Util;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 # copy from Plack::Middleware::AccessLog
 our %formats = (
