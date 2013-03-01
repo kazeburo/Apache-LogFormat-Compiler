@@ -9,13 +9,15 @@ my $build = Module::Build->new(
     build_requires       => {
         'Test::More' => '0.98',
         'Test::Requires' => 0,
+        'HTTP::Request::Common' => 0,
+        'HTTP::Message::PSGI' => 0,
     },
     configure_requires   => { 'Module::Build' => '0.38' },
     requires             => {
         perl => '5.008005',
-        # 'Exporter'                      => '0',
-        'parent'                        => '0',
-        # 'Plack'                         => '0.9949',
+        'POSIX'       => '0',
+        'Time::Local' => '0',
+        'Plack'       => '1.0013',
     },
 
     no_index    => { 'directory' => [ 'inc' ] },
