@@ -56,7 +56,7 @@ my $block_handler = sub {
     } elsif ($type eq 'o') {
         $cb =  q!_string(scalar Plack::Util::headers($res->[1])->get('!.$block.q!'))!;
     } elsif ($type eq 't') {
-        $cb =  q!"[" . _strftime('!.$block.q!', localtime) . "]"!;
+        $cb =  q!"[" . _strftime('!.$block.q!', localtime($time)) . "]"!;
     } else {
         Carp::croak("{$block}$type not supported");
         $cb = "-";
@@ -75,8 +75,8 @@ our %char_handler = (
                        " " . $env->{SERVER_PROTOCOL}!,
     s => q!$res->[0]!,
     b => q!(defined $length ? $length : '-')!,
-    T => q!int($time*1_000_000)!,
-    D => q!$time!,
+    T => q!int($reqtime*1_000_000)!,
+    D => q!$reqtime!,
     v => q!($env->{SERVER_NAME} || '-')!,
     V => q!($env->{HTTP_HOST} || $env->{SERVER_NAME} || '-')!,
     p => q!$env->{SERVER_PORT}!,
@@ -120,21 +120,23 @@ sub compile {
 
     my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
     my $tz = $tzoffset;
-    $fmt = q|sub {
-        my ($env,$res,$length,$time) = @_;
-        my @lt = localtime;
+    $fmt = q~sub {
+        my ($env,$res,$length,$reqtime,$time) = @_;
+        $reqtime ||= 0;
+        $time ||= time();
+        my @lt = localtime($time);;
         my $t = sprintf '%02d/%s/%04d:%02d:%02d:%02d %s', $lt[3], $abbr[$lt[4]], $lt[5]+1900, 
           $lt[2], $lt[1], $lt[0], $tz;
-        q!| . $fmt . q|!
-    }|;
+        q!~ . $fmt . q~!
+    }~;
     $self->{log_handler_code} = $fmt;
     $self->{log_handler} = eval $fmt; ## no critic
 }
 
 sub log_line {
     my $self = shift;
-    my ($env,$res,$length,$time) = @_;
-    my $log = $self->{log_handler}->($env,$res,$length,$time);
+    my ($env,$res,$length,$reqtime,$time) = @_;
+    my $log = $self->{log_handler}->($env,$res,$length,$reqtime,$time);
     $log . "\n";
 }
 
@@ -152,13 +154,11 @@ Apache::LogFormat::Compiler - Compile LogFormat to perl-code
   use Apache::LogFormat::Compiler;
 
   my $log_handler = Apache::LogFormat::Compiler->new("combined");
-  # my $log_handler = Apache::LogFormat::Compiler->new(
-  #     '%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i"'
-  # );
   my $log = $log_handler->log_line(
       $env,
       $res,
       $length,
+      $reqtime,
       $time
   );
 
@@ -202,9 +202,39 @@ with one of the mandatory modifier flags C<i>, C<o> or C<t>:
    %{header-name}o      header-name header
    %{time-format]t      localtime in the specified strftime format
 
-=item log_line($env:HashRef,$res:ArrayRef,$length:Integer,$time:Integer): $log:String
+=item log_line($env:HashRef,$res:ArrayRef,$length:Integer,$reqtime:Integer,$time:Integer): $log:String
 
-PSGI-style $env and $res, Content-Length and the time taken to serve request in microseconds.
+Generates log line.
+
+  $env      PSGI-style $env
+  $res      PSGI-style $res
+  $length   Content-Length
+  $reqtime  the time taken to serve request in microseconds 
+  $time     time the request was received
+
+Sample psgi 
+
+  use Plack::Builder;
+  use Time::HiRes;
+  use Apache::LogFormat::Compiler;
+
+  my $log_handler = Apache::LogFormat::Compiler->new(
+      '%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i" %D'
+  );
+  my $compile_log_app = builder {
+      enable sub {
+          my $app = shift;
+          sub {
+              my $env = shift;
+              my $t0 = [gettimeofday];
+              my $res = $app->();
+              my $reqtime = int(Time::HiRes::tv_interval($t0) * 1_000_000);
+              $env->{psgi.error}->print($log_handler->log_line(
+                  $env,$res,6,$reqtime, $t0->[0]));
+          }
+      };
+      $app
+  };
 
 =back
 
