@@ -35,9 +35,9 @@ sub _strftime {
 
 sub _safe {
     my $string = shift;
-    $string =~ s/([^[:print:]])/"\\x" . unpack("H*", $1)/eg
-        if defined $string;
-    $string;
+    return unless defined $string;
+    $string =~ s/([^[:print:]])/"\\x" . unpack("H*", $1)/eg;
+    return $string;
 }
 
 sub _string {
@@ -81,6 +81,11 @@ our %char_handler = (
     V => q!($env->{HTTP_HOST} || $env->{SERVER_NAME} || '-')!,
     p => q!$env->{SERVER_PORT}!,
     P => q!$$!,
+    m => q!_safe($env->{REQUEST_METHOD})!,
+    U => q!_safe($env->{PATH_INFO})!,
+    q => q!(($env->{QUERY_STRING} ne '') ? '?' . _safe($env->{QUERY_STRING}) : '' )!,
+    H => q!$env->{SERVER_PROTOCOL}!,
+
 );
 
 my $char_handler = sub {
@@ -192,6 +197,10 @@ L<Apache's LogFormat templates|http://httpd.apache.org/docs/2.0/mod/mod_log_conf
    %V    HTTP_HOST or SERVER_NAME from the PSGI environment, or -
    %p    SERVER_PORT from the PSGI environment
    %P    the worker's process id
+   %m    REQUEST_METHOD from the PSGI environment
+   %U    PATH_INFO from the PSGI environment
+   %q    QUERY_STRING from the PSGI environment
+   %H    SERVER_PROTOCOL from the PSGI environment
 
 Some of these format fields are only supported by middleware that subclasses C<AccessLog>.
 

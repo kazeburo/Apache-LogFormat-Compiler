@@ -34,5 +34,22 @@ use Apache::LogFormat::Compiler;
 };
 
 
+{
+    my $log_handler = Apache::LogFormat::Compiler->new(
+        '%m %U %q %H'
+    );
+    ok($log_handler);
+    my $log = $log_handler->log_line(
+        req_to_psgi(GET "/foo?bar=baz"),
+        [200,[],[q!OK!]],
+        2,
+        1_000_000,
+        time()
+    );
+    like $log, 
+        qr!^GET /foo \?bar=baz HTTP/1\.1$!
+};
+
+
 done_testing();
 
