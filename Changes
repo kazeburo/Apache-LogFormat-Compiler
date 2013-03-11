@@ -1,5 +1,8 @@
 Revision history for Perl extension Apache::LogFormat::Compiler
 
+0.03    Mon Mar 11 11:28:35 2013
+    - Added custom log formats for %m, %U, %q and %H
+
 0.02    Fri Mar  1 23:32:11 2013
     - added $time option to log_line. the request was recieved 
 
