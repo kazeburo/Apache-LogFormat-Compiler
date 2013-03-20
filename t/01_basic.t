@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use HTTP::Request::Common;
-use HTTP::Message::PSGI;
+use t::Req2PSGI;
 use Test::More;
 use Apache::LogFormat::Compiler;
 
@@ -9,7 +9,7 @@ use Apache::LogFormat::Compiler;
     my $log_handler = Apache::LogFormat::Compiler->new();
     ok($log_handler);
     my $log = $log_handler->log_line(
-        req_to_psgi(GET "/"),
+        t::Req2PSGI::req_to_psgi(GET "/"),
         [200,[],[q!OK!]],
         2,
     );
@@ -23,7 +23,7 @@ use Apache::LogFormat::Compiler;
     );
     ok($log_handler);
     my $log = $log_handler->log_line(
-        req_to_psgi(GET "/"),
+        t::Req2PSGI::req_to_psgi(GET "/"),
         [200,[],[q!OK!]],
         2,
         1_000_000,
@@ -40,7 +40,7 @@ use Apache::LogFormat::Compiler;
     );
     ok($log_handler);
     my $log = $log_handler->log_line(
-        req_to_psgi(GET "/foo?bar=baz"),
+        t::Req2PSGI::req_to_psgi(GET "/foo?bar=baz"),
         [200,[],[q!OK!]],
         2,
         1_000_000,

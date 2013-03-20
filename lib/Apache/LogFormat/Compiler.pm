@@ -6,7 +6,6 @@ use 5.008005;
 use Carp;
 use POSIX ();
 use Time::Local qw//;
-use Plack::Util;
 
 our $VERSION = '0.03';
 
@@ -47,6 +46,19 @@ sub _string {
     _safe($string);
 }
 
+sub header_get {
+    my ($headers, $key) = @_;
+    $key = lc $key;
+    my @headers = @$headers; # copy
+    my $value;
+    while (my($hdr, $val) = splice @headers, 0, 2) {
+        if ( lc $hdr eq $key ) {
+            $value = $val;
+        }
+    }
+    return $value;
+}
+
 my $psgi_reserved = { CONTENT_LENGTH => 1, CONTENT_TYPE => 1 };
 
 my $block_handler = sub {
@@ -58,7 +70,7 @@ my $block_handler = sub {
         $block = "HTTP_${block}" unless $psgi_reserved->{$block};
         $cb =  q!_string($env->{'!.$block.q!'})!;
     } elsif ($type eq 'o') {
-        $cb =  q!_string(scalar Plack::Util::headers($res->[1])->get('!.$block.q!'))!;
+        $cb =  q!_string(header_get($res->[1],'!.$block.q!'))!;
     } elsif ($type eq 't') {
         $cb =  q!"[" . _strftime('!.$block.q!', localtime($time)) . "]"!;
     } else {
