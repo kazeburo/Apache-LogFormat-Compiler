@@ -47,12 +47,16 @@ sub _string {
     _safe($string);
 }
 
+my $psgi_reserved = { CONTENT_LENGTH => 1, CONTENT_TYPE => 1 };
+
 my $block_handler = sub {
     my($block, $type) = @_;
     my $cb;
     if ($type eq 'i') {
         $block =~ s/-/_/g;
-        $cb =  q!_string($env->{"HTTP_" . uc('!.$block.q!')})!;
+        $block = uc($block);
+        $block = "HTTP_${block}" unless $psgi_reserved->{$block};
+        $cb =  q!_string($env->{'!.$block.q!'})!;
     } elsif ($type eq 'o') {
         $cb =  q!_string(scalar Plack::Util::headers($res->[1])->get('!.$block.q!'))!;
     } elsif ($type eq 't') {
