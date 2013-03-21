@@ -62,7 +62,7 @@ sub header_get {
 my $psgi_reserved = { CONTENT_LENGTH => 1, CONTENT_TYPE => 1 };
 
 my $block_handler = sub {
-    my($block, $type) = @_;
+    my($self,$block, $type) = @_;
     my $cb;
     if ($type eq 'i') {
         $block =~ s/-/_/g;
@@ -73,6 +73,8 @@ my $block_handler = sub {
         $cb =  q!_string(header_get($res->[1],'!.$block.q!'))!;
     } elsif ($type eq 't') {
         $cb =  q!"[" . _strftime('!.$block.q!', localtime($time)) . "]"!;
+    } elsif (exists $self->{extra_block_handlers}->{$type}) {
+        $cb =  q!_string($extra_block_handlers->{'!.$type.q!'}->('!.$block.q!',$env,$res,$length,$reqtime))!;
     } else {
         Carp::croak("{$block}$type not supported");
         $cb = "-";
@@ -105,8 +107,12 @@ our %char_handler = (
 );
 
 my $char_handler = sub {
+    my $self = shift;
     my $char = shift;
     my $cb = $char_handler{$char};
+    if (!$cb && exists $self->{extra_char_handlers}->{$char}) {
+        $cb = q!_string($extra_char_handlers->{'!.$char.q!'}->($env,$res,$length,$reqtime))!;
+    }
     unless ($cb) {
         Carp::croak "\%$char not supported.";
         return "-";
@@ -121,8 +127,12 @@ sub new {
     my $fmt = shift || "combined";
     $fmt = $formats{$fmt} if exists $formats{$fmt};
 
+    my %opts = @_;
+
     my $self = bless {
-        fmt => $fmt
+        fmt => $fmt,
+        extra_block_handlers => $opts{block_handlers} || {},
+        extra_char_handlers => $opts{char_handlers} || {},
     }, $class; 
     $self->compile();
     return $self;
@@ -134,13 +144,15 @@ sub compile {
     $fmt =~ s/!/\\!/g;
     $fmt =~ s!
         (?:
-             \%\{(.+?)\}([a-z]) |
+             \%\{(.+?)\}([a-zA-Z]) |
              \%(?:[<>])?([a-zA-Z\%])
         )
-    ! $1 ? $block_handler->($1, $2) : $char_handler->($3) !egx;
+    ! $1 ? $block_handler->($self, $1, $2) : $char_handler->($self, $3) !egx;
 
     my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
     my $tz = $tzoffset;
+    my $extra_block_handlers = $self->{extra_block_handlers};
+    my $extra_char_handlers = $self->{extra_char_handlers};
     $fmt = q~sub {
         my ($env,$res,$length,$reqtime,$time) = @_;
         $reqtime ||= 0;
@@ -262,6 +274,33 @@ Sample psgi
   };
 
 =back
+
+=head1 ADD CUSTOM FORMAT STRING
+
+Apache::LogFormat::Compiler allows to add custom format string
+
+  my $log_handler = Apache::LogFormat::Compiler->new(
+      '%z %{HTTP_X_FORWARDED_FOR|REMOTE_ADDR}Z',
+      char_handlers => +{
+          'z' => sub {
+              my ($env,$req) = @_;
+              return $env->{HTTP_X_FORWARDED_FOR};
+          }
+      },
+      block_handlers => +{
+          'Z' => sub {
+              my ($block,$env,$req) = @_;
+              # block eq 'HTTP_X_FORWARDED_FOR|REMOTE_ADDR'
+              my ($main, $alt) = split('\|', $args);
+              return exists $env->{$main} ? $env->{$main} : $env->{$alt};
+          }
+      },
+  );
+
+Any single letter can be used other than Apache::LogFormat::Compiler used.
+Your sub is called with two or three arguments the content inside the C<{}> 
+from the format (block_handlers only), PSGI environment (C<$env>), 
+and ArrayRef of the response. It should return the string to be logged
 
 =head1 AUTHOR
 
