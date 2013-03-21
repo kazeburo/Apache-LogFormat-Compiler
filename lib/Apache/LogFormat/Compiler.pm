@@ -54,6 +54,7 @@ sub header_get {
     while (my($hdr, $val) = splice @headers, 0, 2) {
         if ( lc $hdr eq $key ) {
             $value = $val;
+            last;
         }
     }
     return $value;
