@@ -94,8 +94,8 @@ our %char_handler = (
                        " " . $env->{SERVER_PROTOCOL}!,
     s => q!$res->[0]!,
     b => q!(defined $length ? $length : '-')!,
-    T => q!int($reqtime*1_000_000)!,
-    D => q!$reqtime!,
+    T => q!(defined $reqtime ? int($reqtime*1_000_000) : '-')!,
+    D => q!(defined $reqtime ? $reqtime : '-')!,
     v => q!($env->{SERVER_NAME} || '-')!,
     V => q!($env->{HTTP_HOST} || $env->{SERVER_NAME} || '-')!,
     p => q!$env->{SERVER_PORT}!,
@@ -156,8 +156,7 @@ sub compile {
     my $extra_char_handlers = $self->{extra_char_handlers};
     $fmt = q~sub {
         my ($env,$res,$length,$reqtime,$time) = @_;
-        $reqtime ||= 0;
-        $time ||= time();
+        $time = time() if ! defined $time;
         my @lt = localtime($time);;
         my $t = sprintf '%02d/%s/%04d:%02d:%02d:%02d %s', $lt[3], $abbr[$lt[4]], $lt[5]+1900, 
           $lt[2], $lt[1], $lt[0], $tz;
