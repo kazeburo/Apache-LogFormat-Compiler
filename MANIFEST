@@ -10,6 +10,8 @@ README
 t/00_compile.t
 t/01_basic.t
 t/02_custom.t
+t/03_extra.t
+t/Req2PSGI.pm
 xt/01_podspell.t
 xt/02_perlcritic.t
 xt/03_pod.t

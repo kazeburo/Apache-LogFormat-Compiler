@@ -1,5 +1,10 @@
 Revision history for Perl extension Apache::LogFormat::Compiler
 
+0.04    Fri Mar 22 14:03:54 2013
+    - custom format string support
+    - remove Plack dependency
+    - [bug fix] Special-case Content-Length and Content-Type for %{}i. They are reseverd in PSGI
+
 0.03    Mon Mar 11 11:28:35 2013
     - Added custom log formats for %m, %U, %q and %H
 
