@@ -7,7 +7,7 @@ use Carp;
 use POSIX ();
 use Time::Local qw//;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 # copy from Plack::Middleware::AccessLog
 our %formats = (
@@ -198,8 +198,6 @@ Apache::LogFormat::Compiler - Compile LogFormat to perl-code
 =head1 DESCRIPTION
 
 Compile LogFormat to perl-code. For faster generating access_log line.
-
-B<THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE>.
 
 =head1 METHOD
 

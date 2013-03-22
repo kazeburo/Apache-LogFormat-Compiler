@@ -1,5 +1,9 @@
 Revision history for Perl extension Apache::LogFormat::Compiler
 
+0.05    Fri Mar 22 16:18:21 2013
+    - compatibility with Plack::Middleware::AccessLog
+      if reqtime is undefined, use "-" instead of "0" for %D and %T. 
+
 0.04    Fri Mar 22 14:03:54 2013
     - custom format string support
     - remove Plack dependency
