@@ -180,7 +180,7 @@ __END__
 
 =head1 NAME
 
-Apache::LogFormat::Compiler - Compile LogFormat to perl-code 
+Apache::LogFormat::Compiler - Compile a log format string to perl-code 
 
 =head1 SYNOPSIS
 
@@ -197,7 +197,7 @@ Apache::LogFormat::Compiler - Compile LogFormat to perl-code
 
 =head1 DESCRIPTION
 
-Compile LogFormat to perl-code. For faster generating access_log line.
+Compile a log format string to perl-code. For faster generating access_log line.
 
 =head1 METHOD
 
@@ -228,8 +228,6 @@ L<Apache's LogFormat templates|http://httpd.apache.org/docs/2.0/mod/mod_log_conf
    %q    QUERY_STRING from the PSGI environment
    %H    SERVER_PROTOCOL from the PSGI environment
 
-Some of these format fields are only supported by middleware that subclasses C<AccessLog>.
-
 In addition, custom values can be referenced, using C<%{name}>,
 with one of the mandatory modifier flags C<i>, C<o> or C<t>:
 
@@ -241,11 +239,11 @@ with one of the mandatory modifier flags C<i>, C<o> or C<t>:
 
 Generates log line.
 
-  $env      PSGI-style $env
-  $res      PSGI-style $res
+  $env      PSGI env request HashRef
+  $res      PSGI response ArrayRef
   $length   Content-Length
-  $reqtime  the time taken to serve request in microseconds 
-  $time     time the request was received
+  $reqtime  The time taken to serve request in microseconds. optional
+  $time     Time the request was received. optional. If $time is undefined. current timestamp is used.
 
 Sample psgi 
 
