@@ -1,5 +1,7 @@
 Revision history for Perl extension Apache::LogFormat::Compiler
 
+{{$NEXT}}
+
 0.10    Mon Mar 25 17:34:14 2013
     - updated docs
 
