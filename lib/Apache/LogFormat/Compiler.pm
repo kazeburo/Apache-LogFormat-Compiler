@@ -19,7 +19,8 @@ my $tzoffset = POSIX::strftime("%z", localtime);
 if ( $tzoffset !~ /^[+-]\d{4}$/ ) {
     my @t = localtime(time);
     my $s = Time::Local::timegm(@t) - Time::Local::timelocal(@t);
-    $tzoffset = sprintf '%+03d%02u', int($s/3600), $s % 3600;
+    my $min_offset = int($s / 60);
+    $tzoffset = sprintf '%+03d%02u', $min_offset / 60, $min_offset % 60;
 }
 
 sub _strftime {
@@ -206,7 +207,7 @@ Compile a log format string to perl-code. For faster generating access_log line.
 =item new($fmt:String)
 
 Takes a format string (or a preset template C<combined> or C<custom>)
-to specify the log format. This middleware implements a subset of
+to specify the log format. This module implements a subset of
 L<Apache's LogFormat templates|http://httpd.apache.org/docs/2.0/mod/mod_log_config.html>:
 
    %%    a percent sign

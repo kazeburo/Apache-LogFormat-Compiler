@@ -24,7 +24,7 @@ Compile a log format string to perl-code. For faster generating access\_log line
 - new($fmt:String)
 
     Takes a format string (or a preset template `combined` or `custom`)
-    to specify the log format. This middleware implements a subset of
+    to specify the log format. This module implements a subset of
     [Apache's LogFormat templates](http://httpd.apache.org/docs/2.0/mod/mod\_log\_config.html):
 
         %%    a percent sign
