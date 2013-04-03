@@ -2,6 +2,11 @@ Revision history for Perl extension Apache::LogFormat::Compiler
 
 {{$NEXT}}
 
+0.12 2013-04-03T16:14:28Z
+
+   - fixed tzoffset calculation.
+     https://github.com/plack/Plack/pull/344
+
 0.11 2013-04-03T06:51:48Z
 
     - re-packaging with Minilla
