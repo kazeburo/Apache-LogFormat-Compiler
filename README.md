@@ -17,7 +17,7 @@ Apache::LogFormat::Compiler - Compile a log format string to perl-code
 
 # DESCRIPTION
 
-Compile a log format string to perl-code. For faster generating access\_log line.
+Compile a log format string to perl-code. For faster generation of access\_log lines.
 
 # METHOD
 
@@ -53,7 +53,7 @@ Compile a log format string to perl-code. For faster generating access\_log line
         %{header-name}o      header-name header in the response
         %{time-format]t      localtime in the specified strftime format
 
-- log\_line($env:HashRef,$res:ArrayRef,$length:Integer,$reqtime:Integer,$time:Integer): $log:String
+- log\_line($env:HashRef, $res:ArrayRef, $length:Integer, $reqtime:Integer, $time:Integer): $log:String
 
     Generates log line.
 
@@ -89,7 +89,7 @@ Compile a log format string to perl-code. For faster generating access\_log line
 
 # ADD CUSTOM FORMAT STRING
 
-Apache::LogFormat::Compiler allows to add custom format string
+Apache::LogFormat::Compiler allows one to add a custom format string
 
     my $log_handler = Apache::LogFormat::Compiler->new(
         '%z %{HTTP_X_FORWARDED_FOR|REMOTE_ADDR}Z',
@@ -109,10 +109,10 @@ Apache::LogFormat::Compiler allows to add custom format string
         },
     );
 
-Any single letter can be used other than Apache::LogFormat::Compiler used.
-Your sub is called with two or three arguments the content inside the `{}` 
-from the format (block\_handlers only), PSGI environment (`$env`), 
-and ArrayRef of the response. It should return the string to be logged
+Any single letter can be used, other than those already defined by Apache::LogFormat::Compiler.
+Your sub is called with two or three arguments: the content inside the `{}`
+from the format (block\_handlers only), the PSGI environment (`$env`),
+and the ArrayRef of the response. It should return the string to be logged.
 
 # AUTHOR
 
