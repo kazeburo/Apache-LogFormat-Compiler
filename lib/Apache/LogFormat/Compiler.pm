@@ -7,7 +7,7 @@ use Carp;
 use POSIX ();
 use Time::Local qw//;
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 # copy from Plack::Middleware::AccessLog
 our %formats = (
