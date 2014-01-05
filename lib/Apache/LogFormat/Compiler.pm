@@ -39,7 +39,7 @@ BEGIN {
 
 sub _strftime {
     my ($fmt, @time) = @_;
-    if (_has_strftime_z) {
+    if (not _has_strftime_z) {
         my $tz = _tzoffset(@time);
         $fmt =~ s/%z/$tz/g;
     }
