@@ -1,49 +1,48 @@
-#!/usr/bin/env perl
-
 use strict;
-use warnings;
+use Benchmark qw/ :all /;
+use File::Temp qw/ tempfile /;
+use Storable qw/ nstore retrieve /;
 use HTTP::Request::Common;
-use HTTP::Message::PSGI;
-use Plack::Test;
-use Plack::Builder;
-use Apache::LogFormat::Compiler;
-use Benchmark qw/cmpthese timethese/;
 
-my $log_app = builder {
-    enable 'AccessLog', format => "combined";
-    sub{ [ 200, [], [ "Hello "] ] };
+
+my $result = {};
+for my $name (qw! extlib-1.0022/lib/perl5 lib !) {
+    my ($fh, $fn) = tempfile();
+    my $pid = fork;
+    if ($pid) {
+        close $fh;
+        wait;
+    }
+    else {
+        eval qq{use lib '$name'};
+        require Plack;
+        use Plack::Builder;
+        
+        warn $Plack::VERSION;
+        my $log_app = builder {
+            enable 'AccessLog', format => "combined", logger => sub {};
+            sub{ [ 200, [], [ "Hello"] ] };
+        };
+
+        my $code = sub {
+            $log_app->({REQUEST_METHOD=>"GET",SERVER_PROTOCOL=>"HTTP/1.0",REQUEST_URI=>"/"});
+        };
+
+        my $r = timethis(0, $code);
+        nstore $r, $fn;
+        exit;
+    }
+    $result->{$name} = retrieve $fn;
 };
 
-my $log_handler = Apache::LogFormat::Compiler->new();
-my $compile_log_app = builder {
-    enable sub {
-        my $app = shift;
-        sub {
-            my $env = shift;
-            my $res = $app->();
-            warn $log_handler->log_line($env,$res,6,0);
-        }
-    };
-    sub{ [ 200, [], [ "Hello "] ] };
-};
-
-my $env = req_to_psgi(GET "/");
-open(STDERR,'>','/dev/null');
-
-cmpthese(timethese(0,{
-    'log'   => sub {
-        $log_app->($env);
-    },
-    'compilelog'   => sub {
-        $compile_log_app->($env);
-    },
-}));
+cmpthese $result;
 
 __END__
-Benchmark: running compilelog, log for at least 3 CPU seconds...
-compilelog:  3 wallclock secs ( 3.03 usr +  0.19 sys =  3.22 CPU) @ 25447.20/s (n=81940)
-       log:  3 wallclock secs ( 3.17 usr +  0.01 sys =  3.18 CPU) @ 3226.73/s (n=10261)
-              Rate        log compilelog
-log         3227/s         --       -87%
-compilelog 25447/s       689%         --
+1.0022 at eg/logbench.pl line 21.
+timethis for 3:  3 wallclock secs ( 3.17 usr +  0.00 sys =  3.17 CPU) @ 8828.71/s (n=27987)
+1.0030 at eg/logbench.pl line 21.
+timethis for 3:  3 wallclock secs ( 3.28 usr +  0.00 sys =  3.28 CPU) @ 50064.02/s (n=164210)
+                           Rate extlib-1.0022/lib/perl5                     lib
+extlib-1.0022/lib/perl5  8829/s                      --                    -82%
+lib                     50064/s                    467%                      --
 
