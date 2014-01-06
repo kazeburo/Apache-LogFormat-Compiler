@@ -327,6 +327,11 @@ Your sub is called with two or three arguments: the content inside the C<{}>
 from the format (block_handlers only), the PSGI environment (C<$env>),
 and the ArrayRef of the response. It should return the string to be logged.
 
+=head1 RECOMMENDED MODULE
+
+If L<POSIX::strftime::GNU> is available, Apache::LogFormat::Compiler uses it. 
+It's good for Windows and old Unices have limited strftime's formatting.
+
 =head1 AUTHOR
 
 Masahiro Nagano E<lt>kazeburo@gmail.comE<gt>
