@@ -100,7 +100,7 @@ my $block_handler = sub {
     } elsif ($type eq 'o') {
         $cb =  q!_string(header_get($res->[1],'!.$block.q!'))!;
     } elsif ($type eq 't') {
-        $cb =  q!"[" . _strftime($self,'!.$block.q!', localtime($time)) . "]"!;
+        $cb =  q!"[" . _strftime($this,'!.$block.q!', localtime($time)) . "]"!;
     } elsif (exists $self->{extra_block_handlers}->{$type}) {
         $cb =  q!_string($extra_block_handlers->{'!.$type.q!'}->('!.$block.q!',$env,$res,$length,$reqtime))!;
     } else {
@@ -183,10 +183,10 @@ sub compile {
     
     my @lt = localtime(time);
     $fmt = q~sub {
-        my ($self,$env,$res,$length,$reqtime,$time) = @_;
+        my ($this,$env,$res,$length,$reqtime,$time) = @_;
         $time = time() if ! defined $time;
         my @lt = localtime($time);
-        my $tz = _tzoffset($self,@lt);
+        my $tz = _tzoffset($this,@lt);
         my $t = sprintf '%02d/%s/%04d:%02d:%02d:%02d %s', $lt[3], $abbr[$lt[4]], $lt[5]+1900, 
           $lt[2], $lt[1], $lt[0], $tz;
         q!~ . $fmt . q~!

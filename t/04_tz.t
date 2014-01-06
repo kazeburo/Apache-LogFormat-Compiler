@@ -25,11 +25,12 @@ for my $timezones (@timezones) {
     my $log_handler = Apache::LogFormat::Compiler->new('%t');
 
     subtest "$timezone" => sub {
+        my $i=0;
         for my $date ( ([10,1,2013], [10,5,2013], [15,8,2013], [15,11,2013]) ) {
             my ($day,$month,$year) = @$date;
             
             set_fixed_time(timelocal(0, 45, 12, $day, $month - 1, $year));
-            my $tz = shift @tz;
+            my $tz = $tz[$i];
 
             my $log = $log_handler->log_line(
                 t::Req2PSGI::req_to_psgi(GET "/"),
@@ -38,8 +39,31 @@ for my $timezones (@timezones) {
             
             my $month_name = $abbr[$month-1];
             is $log, "[$day/$month_name/2013:12:45:00 $tz]\n","$timezone $year/$month/$day";
+            $i++;
         }
     };
+
+    my $log_handler2 = Apache::LogFormat::Compiler->new('%{%z}t');
+    subtest "$timezone custom format" => sub {
+        my $i=0;
+        for my $date ( ([10,1,2013], [10,5,2013], [15,8,2013], [15,11,2013]) ) {
+            my ($day,$month,$year) = @$date;
+            
+            set_fixed_time(timelocal(0, 45, 12, $day, $month - 1, $year));
+            my $tz = $tz[$i];
+
+            my $log = $log_handler2->log_line(
+                t::Req2PSGI::req_to_psgi(GET "/"),
+                [200,[],[q!OK!]],
+            );
+            
+            my $month_name = $abbr[$month-1];
+            is $log, "[$tz]\n","custom format: $timezone $year/$month/$day";
+            $i++;
+        }
+    };
+    
+
 }
 
 done_testing();
