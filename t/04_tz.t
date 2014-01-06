@@ -7,6 +7,7 @@ use Test::MockTime qw/set_fixed_time restore_time/;
 use t::Req2PSGI;
 use Apache::LogFormat::Compiler;
 use HTTP::Request::Common;
+use Try::Tiny;
 
 my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
 my @timezones = ( 
@@ -16,6 +17,8 @@ my @timezones = (
     ['Europe/London', '+0000','+0100','+0100','+0000'],
     ['America/New_York','-0500', '-0400', '-0400', '-0500']
 );
+
+try { POSIX::tzset } catch { plan skip_all => 'POSIX::tzset not implemented on this architecture' };
 
 for my $timezones (@timezones) {
     my ($timezone, @tz) = @$timezones;
