@@ -15,20 +15,37 @@ our %formats = (
     combined => '%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i"',
 );
 
-my $tzoffset = POSIX::strftime("%z", localtime);
-if ( $tzoffset !~ /^[+-]\d{4}$/ ) {
-    my @t = localtime(time);
-    my $s = Time::Local::timegm(@t) - Time::Local::timelocal(@t);
-    my $min_offset = int($s / 60);
-    $tzoffset = sprintf '%+03d%02u', $min_offset / 60, $min_offset % 60;
+BEGIN {
+    if (eval { require POSIX::strftime::GNU; 1; }) {
+        *_posix_strftime = \&POSIX::strftime::GNU::strftime;
+    } else {
+        *_posix_strftime = \&POSIX::strftime;
+    };
+
+    if (_posix_strftime("%z", localtime) =~ /^[+-]\d{4}$/) {
+        *_has_strftime_z = sub () { !! 1 };
+        *_tzoffset = sub {
+            return _posix_strftime('%z', @_);
+        };
+    } else {
+        *_has_strftime_z = sub () { !! 0 };
+        *_tzoffset = sub {
+            my $s = Time::Local::timegm(@_) - Time::Local::timelocal(@_);
+            my $min_offset = int($s / 60);
+            return sprintf '%+03d%02u', $min_offset / 60, $min_offset % 60;
+        };
+    }
 }
 
 sub _strftime {
     my ($fmt, @time) = @_;
-    $fmt =~ s/%z/$tzoffset/g if $tzoffset;
+    if (not _has_strftime_z) {
+        my $tz = _tzoffset(@time);
+        $fmt =~ s/%z/$tz/g;
+    }
     my $old_locale = POSIX::setlocale(&POSIX::LC_ALL);
     POSIX::setlocale(&POSIX::LC_ALL, 'C');
-    my $out = POSIX::strftime($fmt, @time);
+    my $out = _posix_strftime($fmt, @time);
     POSIX::setlocale(&POSIX::LC_ALL, $old_locale);
     return $out;
 };
@@ -152,13 +169,13 @@ sub compile {
     ! $1 ? $block_handler->($self, $1, $2) : $char_handler->($self, $3) !egx;
 
     my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
-    my $tz = $tzoffset;
     my $extra_block_handlers = $self->{extra_block_handlers};
     my $extra_char_handlers = $self->{extra_char_handlers};
     $fmt = q~sub {
         my ($env,$res,$length,$reqtime,$time) = @_;
         $time = time() if ! defined $time;
-        my @lt = localtime($time);;
+        my @lt = localtime($time);
+        my $tz = _tzoffset(@lt);
         my $t = sprintf '%02d/%s/%04d:%02d:%02d:%02d %s', $lt[3], $abbr[$lt[4]], $lt[5]+1900, 
           $lt[2], $lt[1], $lt[0], $tz;
         q!~ . $fmt . q~!
