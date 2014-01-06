@@ -2,6 +2,11 @@ Revision history for Perl extension Apache::LogFormat::Compiler
 
 {{$NEXT}}
 
+0.14 2014-01-06T05:41:14Z
+
+   - Check tzoffset for every line. It's need for daylight saving time.
+   - Use POSIX::strftime::GNU if available (Thank you dex4er)
+
 0.13 2013-05-24T00:19:31Z
 
    - fixed pod issue (Thank you fschlich)
