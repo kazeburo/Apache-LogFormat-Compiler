@@ -24,23 +24,32 @@ BEGIN {
 
     if (_posix_strftime("%z", localtime) =~ /^[+-]\d{4}$/) {
         *_has_strftime_z = sub () { !! 1 };
-        *_tzoffset = sub {
-            return _posix_strftime('%z', @_);
-        };
     } else {
         *_has_strftime_z = sub () { !! 0 };
-        *_tzoffset = sub {
-            my $s = Time::Local::timegm(@_) - Time::Local::timelocal(@_);
-            my $min_offset = int($s / 60);
-            return sprintf '%+03d%02u', $min_offset / 60, $min_offset % 60;
-        };
     }
 }
 
+sub _tzoffset {
+    my $self = shift;
+    if ( ! exists $self->{tz_cache} || ! exists $self->{isdst_cache} || $_[8] ne $self->{isdst_cache} ) {
+        $self->{isdst_cache} = $_[8];
+        if ( _has_strftime_z ) {
+            $self->{tz_cache} = _posix_strftime('%z', @_);
+        }
+        else {
+            my $s = Time::Local::timegm(@_) - Time::Local::timelocal(@_);
+            my $min_offset = int($s / 60);
+            $self->{tz_cache} = sprintf '%+03d%02u', $min_offset / 60, $min_offset % 60;
+        }
+    }
+    $self->{tz_cache};
+}
+
 sub _strftime {
+    my $self = shift;
     my ($fmt, @time) = @_;
     if (not _has_strftime_z) {
-        my $tz = _tzoffset(@time);
+        my $tz = _tzoffset($self,@time);
         $fmt =~ s/%z/$tz/g;
     }
     my $old_locale = POSIX::setlocale(&POSIX::LC_ALL);
@@ -91,7 +100,7 @@ my $block_handler = sub {
     } elsif ($type eq 'o') {
         $cb =  q!_string(header_get($res->[1],'!.$block.q!'))!;
     } elsif ($type eq 't') {
-        $cb =  q!"[" . _strftime('!.$block.q!', localtime($time)) . "]"!;
+        $cb =  q!"[" . _strftime($self,'!.$block.q!', localtime($time)) . "]"!;
     } elsif (exists $self->{extra_block_handlers}->{$type}) {
         $cb =  q!_string($extra_block_handlers->{'!.$type.q!'}->('!.$block.q!',$env,$res,$length,$reqtime))!;
     } else {
@@ -171,11 +180,13 @@ sub compile {
     my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
     my $extra_block_handlers = $self->{extra_block_handlers};
     my $extra_char_handlers = $self->{extra_char_handlers};
+    
+    my @lt = localtime(time);
     $fmt = q~sub {
-        my ($env,$res,$length,$reqtime,$time) = @_;
+        my ($self,$env,$res,$length,$reqtime,$time) = @_;
         $time = time() if ! defined $time;
         my @lt = localtime($time);
-        my $tz = _tzoffset(@lt);
+        my $tz = _tzoffset($self,@lt);
         my $t = sprintf '%02d/%s/%04d:%02d:%02d:%02d %s', $lt[3], $abbr[$lt[4]], $lt[5]+1900, 
           $lt[2], $lt[1], $lt[0], $tz;
         q!~ . $fmt . q~!
@@ -187,7 +198,7 @@ sub compile {
 sub log_line {
     my $self = shift;
     my ($env,$res,$length,$reqtime,$time) = @_;
-    my $log = $self->{log_handler}->($env,$res,$length,$reqtime,$time);
+    my $log = $self->{log_handler}->($self,$env,$res,$length,$reqtime,$time);
     $log . "\n";
 }
 
