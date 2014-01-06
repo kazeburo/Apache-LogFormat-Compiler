@@ -9,7 +9,6 @@ use Apache::LogFormat::Compiler;
 use HTTP::Request::Common;
 
 my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
-#                   +0930            +900       0   -400
 my @timezones = ( 
     ['Australia/Darwin','+0930','+0930','+0930','+0930' ],
     ['Asia/Tokyo', '+0900','+0900','+0900','+0900'],
