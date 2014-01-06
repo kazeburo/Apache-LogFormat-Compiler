@@ -8,6 +8,13 @@ use t::Req2PSGI;
 use Apache::LogFormat::Compiler;
 use HTTP::Request::Common;
 
+eval {
+    POSIX::tzset;
+};
+if ( $@ ) {
+    plan skip_all => 'POSIX::tzset not implemented on this architecture'
+}
+
 my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
 my @timezones = ( 
     ['Australia/Darwin','+0930','+0930','+0930','+0930' ],
