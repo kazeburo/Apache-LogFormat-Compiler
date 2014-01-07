@@ -42,13 +42,13 @@
          }
       },
       "runtime" : {
-         "recommends" : {
-            "POSIX::strftime::GNU" : "0"
-         },
          "requires" : {
             "POSIX" : "0",
             "Time::Local" : "0",
             "perl" : "5.008005"
+         },
+         "suggests" : {
+            "POSIX::strftime::GNU" : "0"
          }
       },
       "test" : {
