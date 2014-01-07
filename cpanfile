@@ -1,6 +1,6 @@
 requires 'POSIX';
 requires 'Time::Local';
-requires 'perl', '5.008005';
+requires 'perl', '5.008004';
 
 suggests 'POSIX::strftime::GNU';
 

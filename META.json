@@ -45,7 +45,7 @@
          "requires" : {
             "POSIX" : "0",
             "Time::Local" : "0",
-            "perl" : "5.008005"
+            "perl" : "5.008004"
          },
          "suggests" : {
             "POSIX::strftime::GNU" : "0"
