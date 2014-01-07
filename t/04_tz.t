@@ -14,12 +14,8 @@ sub time_difference {
 }
 
 eval {
-    local $ENV{TZ} = 'UTC';
     POSIX::tzset;
-    my $diff1 = time_difference();
-    local $ENV{TZ} = 'Asia/Tokyo';
-    POSIX::tzset;
-    die if $diff1 == time_difference();
+    die 'tzset does not die on cygwin. but timezone is not changed!' if $^O eq 'cygwin';
 };
 if ( $@ ) {
     plan skip_all => 'POSIX::tzset not implemented on this architecture'
