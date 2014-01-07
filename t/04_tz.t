@@ -8,8 +8,18 @@ use t::Req2PSGI;
 use Apache::LogFormat::Compiler;
 use HTTP::Request::Common;
 
+sub time_difference {
+    my $now = time();
+    timegm(localtime($now)) - $now;    
+}
+
 eval {
+    local $ENV{TZ} = 'UTC';
     POSIX::tzset;
+    my $diff1 = time_difference();
+    local $ENV{TZ} = 'Asia/Tokyo';
+    POSIX::tzset;
+    die if $diff1 == time_difference();
 };
 if ( $@ ) {
     plan skip_all => 'POSIX::tzset not implemented on this architecture'
