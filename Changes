@@ -2,6 +2,11 @@ Revision history for Perl extension Apache::LogFormat::Compiler
 
 {{$NEXT}}
 
+0.21 2014-01-07T13:43:29Z
+
+   - requires perl v5.8.4 (Thank you dex4er)
+   - skip tz test on Cygwin.
+
 0.20 2014-01-07T00:38:29Z
 
    - Fixed test. Cygwin does not die tzset. But timezone does not been changed
