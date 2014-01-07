@@ -2,6 +2,10 @@ Revision history for Perl extension Apache::LogFormat::Compiler
 
 {{$NEXT}}
 
+0.20 2014-01-07T00:38:29Z
+
+   - Fixed test. Cygwin does not die tzset. But timezone does not been changed
+
 0.15 2014-01-06T13:47:11Z
 
    - Fixed test. POSIX::tzset not implemented on Windows (Thank you dex4er)
