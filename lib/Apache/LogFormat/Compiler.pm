@@ -2,7 +2,7 @@ package Apache::LogFormat::Compiler;
 
 use strict;
 use warnings;
-use 5.008005;
+use 5.008004;
 use Carp;
 use POSIX ();
 use Time::Local qw//;
