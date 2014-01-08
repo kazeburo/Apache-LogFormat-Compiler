@@ -15,10 +15,11 @@ sub time_difference {
 
 eval {
     POSIX::tzset;
-    die 'tzset does not die on cygwin. but timezone is not changed!' if $^O eq 'cygwin';
+    die q!tzset is implemented on this Cygwin. But Windows can't change tz inside script! if $^O eq 'cygwin';
+    die q!tzset is implemented on this Windows. But Windows can't change tz inside script! if $^O eq 'MSWin32';
 };
 if ( $@ ) {
-    plan skip_all => 'POSIX::tzset not implemented on this architecture'
+    plan skip_all => $@;
 }
 
 my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
