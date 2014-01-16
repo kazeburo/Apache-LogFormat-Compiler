@@ -2,6 +2,10 @@ Revision history for Perl extension Apache::LogFormat::Compiler
 
 {{$NEXT}}
 
+0.23 2014-01-16T15:53:09Z
+
+   - fixed POSIX::setlocale fails on system without locales (Android) #6 (Thank you dex4er)
+
 0.22 2014-01-08T00:25:14Z
 
    - skip tz test on Windows.
