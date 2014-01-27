@@ -114,11 +114,6 @@ Your sub is called with two or three arguments: the content inside the `{}`
 from the format (block\_handlers only), the PSGI environment (`$env`),
 and the ArrayRef of the response. It should return the string to be logged.
 
-# RECOMMENDED MODULE
-
-If [POSIX::strftime::GNU](http://search.cpan.org/perldoc?POSIX::strftime::GNU) is available, Apache::LogFormat::Compiler uses it. 
-It's good for Windows and old Unices have limited strftime's formatting.
-
 # AUTHOR
 
 Masahiro Nagano <kazeburo@gmail.com>

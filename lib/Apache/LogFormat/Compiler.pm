@@ -4,9 +4,14 @@ use strict;
 use warnings;
 use 5.008004;
 use Carp;
-use Config;
-use POSIX ();
-use Time::Local qw//;
+use POSIX::strftime::Compiler qw//;
+use constant {
+    ENVS => 0,
+    RES => 1,
+    LENGTH => 2,
+    REQTIME => 3,
+    TIME => 4,
+};
 
 our $VERSION = '0.23';
 
@@ -15,55 +20,6 @@ our %formats = (
     common => '%h %l %u %t "%r" %>s %b',
     combined => '%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i"',
 );
-
-BEGIN {
-    if (eval { require POSIX::strftime::GNU; 1; }) {
-        *_posix_strftime = \&POSIX::strftime::GNU::strftime;
-    } else {
-        *_posix_strftime = \&POSIX::strftime;
-    };
-
-    if (_posix_strftime("%z", localtime) =~ /^[+-]\d{4}$/) {
-        *_has_strftime_z = sub () { !! 1 };
-    } else {
-        *_has_strftime_z = sub () { !! 0 };
-    }
-}
-
-sub _tzoffset {
-    my $self = shift;
-    if ( ! exists $self->{tz_cache} || ! exists $self->{isdst_cache} || $_[8] ne $self->{isdst_cache} ) {
-        $self->{isdst_cache} = $_[8];
-        if ( _has_strftime_z ) {
-            $self->{tz_cache} = _posix_strftime('%z', @_);
-        }
-        else {
-            my $s = Time::Local::timegm(@_) - Time::Local::timelocal(@_);
-            my $min_offset = int($s / 60);
-            $self->{tz_cache} = sprintf '%+03d%02u', $min_offset / 60, $min_offset % 60;
-        }
-    }
-    $self->{tz_cache};
-}
-
-sub _strftime {
-    my $self = shift;
-    my ($fmt, @time) = @_;
-    if (not _has_strftime_z) {
-        my $tz = _tzoffset($self,@time);
-        $fmt =~ s/%z/$tz/g;
-    }
-    my $old_locale;
-    if ( $Config{d_setlocale} ) {
-        $old_locale = POSIX::setlocale(&POSIX::LC_ALL);
-        POSIX::setlocale(&POSIX::LC_ALL, 'C');
-    }
-    my $out = _posix_strftime($fmt, @time);
-    if ( $Config{d_setlocale} ) {
-        POSIX::setlocale(&POSIX::LC_ALL, $old_locale);
-    }
-    return $out;
-};
 
 sub _safe {
     my $string = shift;
@@ -76,7 +32,8 @@ sub _string {
     my $string = shift;
     return '-' if ! defined $string;
     return '-' if ! length $string;
-    _safe($string);
+    $string =~ s/([^[:print:]])/"\\x" . unpack("H*", $1)/eg;
+    return $string;
 }
 
 sub header_get {
@@ -96,19 +53,19 @@ sub header_get {
 my $psgi_reserved = { CONTENT_LENGTH => 1, CONTENT_TYPE => 1 };
 
 my $block_handler = sub {
-    my($self,$block, $type) = @_;
+    my($block, $type, $extra) = @_;
     my $cb;
     if ($type eq 'i') {
         $block =~ s/-/_/g;
         $block = uc($block);
         $block = "HTTP_${block}" unless $psgi_reserved->{$block};
-        $cb =  q!_string($env->{'!.$block.q!'})!;
+        $cb =  q!_string($_[ENVS]->{'!.$block.q!'})!;
     } elsif ($type eq 'o') {
-        $cb =  q!_string(header_get($res->[1],'!.$block.q!'))!;
+        $cb =  q!_string(header_get($_[RES]->[1],'!.$block.q!'))!;
     } elsif ($type eq 't') {
-        $cb =  q!"[" . _strftime($this,'!.$block.q!', localtime($time)) . "]"!;
-    } elsif (exists $self->{extra_block_handlers}->{$type}) {
-        $cb =  q!_string($extra_block_handlers->{'!.$type.q!'}->('!.$block.q!',$env,$res,$length,$reqtime))!;
+        $cb =  q!"[" . POSIX::strftime::Compiler::strftime('!.$block.q!', @lt) . "]"!;
+    } elsif (exists $extra->{$type}) {
+        $cb =  q!_string($extra_block_handlers->{'!.$type.q!'}->('!.$block.q!',$_[ENVS],$_[RES],$_[LENGTH],$_[REQTIME]))!;
     } else {
         Carp::croak("{$block}$type not supported");
         $cb = "-";
@@ -119,33 +76,32 @@ my $block_handler = sub {
 
 our %char_handler = (
     '%' => q!'%'!,
-    h => q!($env->{REMOTE_ADDR} || '-')!,
+    h => q!($_[ENVS]->{REMOTE_ADDR} || '-')!,
     l => q!'-'!,
-    u => q!($env->{REMOTE_USER} || '-')!,
-    t => q!"[" . $t . "]"!,
-    r => q!_safe($env->{REQUEST_METHOD}) . " " . _safe($env->{REQUEST_URI}) .
-                       " " . $env->{SERVER_PROTOCOL}!,
-    s => q!$res->[0]!,
-    b => q!(defined $length ? $length : '-')!,
-    T => q!(defined $reqtime ? int($reqtime*1_000_000) : '-')!,
-    D => q!(defined $reqtime ? $reqtime : '-')!,
-    v => q!($env->{SERVER_NAME} || '-')!,
-    V => q!($env->{HTTP_HOST} || $env->{SERVER_NAME} || '-')!,
-    p => q!$env->{SERVER_PORT}!,
+    u => q!($_[ENVS]->{REMOTE_USER} || '-')!,
+    t => q!'[' . $t . ']'!,
+    r => q!_safe($_[ENVS]->{REQUEST_METHOD}) . " " . _safe($_[ENVS]->{REQUEST_URI}) .
+                       " " . $_[ENVS]->{SERVER_PROTOCOL}!,
+    s => q!$_[RES]->[0]!,
+    b => q!(defined $_[LENGTH] ? $_[LENGTH] : '-')!,
+    T => q!(defined $_[REQTIME] ? int($_[REQTIME]*1_000_000) : '-')!,
+    D => q!(defined $_[REQTIME] ? $_[REQTIME] : '-')!,
+    v => q!($_[ENVS]->{SERVER_NAME} || '-')!,
+    V => q!($_[ENVS]->{HTTP_HOST} || $_[ENVS]->{SERVER_NAME} || '-')!,
+    p => q!$_[ENVS]->{SERVER_PORT}!,
     P => q!$$!,
-    m => q!_safe($env->{REQUEST_METHOD})!,
-    U => q!_safe($env->{PATH_INFO})!,
-    q => q!(($env->{QUERY_STRING} ne '') ? '?' . _safe($env->{QUERY_STRING}) : '' )!,
-    H => q!$env->{SERVER_PROTOCOL}!,
+    m => q!_safe($_[ENVS]->{REQUEST_METHOD})!,
+    U => q!_safe($_[ENVS]->{PATH_INFO})!,
+    q => q!(($_[ENVS]->{QUERY_STRING} ne '') ? '?' . _safe($_[ENVS]->{QUERY_STRING}) : '' )!,
+    H => q!$_[ENVS]->{SERVER_PROTOCOL}!,
 
 );
 
 my $char_handler = sub {
-    my $self = shift;
-    my $char = shift;
+    my ($char, $extra) = @_;
     my $cb = $char_handler{$char};
-    if (!$cb && exists $self->{extra_char_handlers}->{$char}) {
-        $cb = q!_string($extra_char_handlers->{'!.$char.q!'}->($env,$res,$length,$reqtime))!;
+    if (!$cb && exists $extra->{$char}) {
+        $cb = q!_string($extra_char_handlers->{'!.$char.q!'}->($_[ENVS],$_[RES],$_[LENGTH],$_[REQTIME]))!;
     }
     unless ($cb) {
         Carp::croak "\%$char not supported.";
@@ -163,49 +119,53 @@ sub new {
 
     my %opts = @_;
 
-    my $self = bless {
-        fmt => $fmt,
-        extra_block_handlers => $opts{block_handlers} || {},
-        extra_char_handlers => $opts{char_handlers} || {},
-    }, $class; 
-    $self->compile();
-    return $self;
+    my ($code_ref, $code) = compile($fmt, $opts{block_handlers} || {}, $opts{char_handlers} || {});
+    bless [$code_ref, $code], $class;
 }
 
 sub compile {
-    my $self = shift;
-    my $fmt = $self->{fmt};
+    my $fmt = shift;
+    my $extra_block_handlers = shift;
+    my $extra_char_handlers = shift;
     $fmt =~ s/!/\\!/g;
     $fmt =~ s!
         (?:
              \%\{(.+?)\}([a-zA-Z]) |
              \%(?:[<>])?([a-zA-Z\%])
         )
-    ! $1 ? $block_handler->($self, $1, $2) : $char_handler->($self, $3) !egx;
-
-    my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
-    my $extra_block_handlers = $self->{extra_block_handlers};
-    my $extra_char_handlers = $self->{extra_char_handlers};
+    ! $1 ? $block_handler->($1, $2, $extra_block_handlers) : $char_handler->($3, $extra_char_handlers) !egx;
     
-    my @lt = localtime(time);
+    my @abbr = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
+    my $c = {};
     $fmt = q~sub {
-        my ($this,$env,$res,$length,$reqtime,$time) = @_;
-        $time = time() if ! defined $time;
-        my @lt = localtime($time);
-        my $tz = _tzoffset($this,@lt);
-        my $t = sprintf '%02d/%s/%04d:%02d:%02d:%02d %s', $lt[3], $abbr[$lt[4]], $lt[5]+1900, 
-          $lt[2], $lt[1], $lt[0], $tz;
+        $_[TIME] = time() if ! defined $_[TIME];
+        my @lt = localtime($_[TIME]);
+        if ( ! exists $c->{tz_cache} || ! exists $c->{isdst_cache} || $lt[8] != $c->{isdst_cache} ) {
+            $c->{tz_cache} = POSIX::strftime::Compiler::strftime('%z',@lt);
+            $c->{isdst_cache} = $lt[8];
+        }    
+        my $t = sprintf '%02d/%s/%04d:%02d:%02d:%02d %s', $lt[3], $abbr[$lt[4]], $lt[5]+1900,
+          $lt[2], $lt[1], $lt[0], $c->{tz_cache};
         q!~ . $fmt . q~!
     }~;
-    $self->{log_handler_code} = $fmt;
-    $self->{log_handler} = eval $fmt; ## no critic
+    my $code_ref = eval $fmt; ## no critic
+    die $@ . "\n===\n" . $fmt if $@;
+    wantarray ? ($code_ref, $fmt) : $code_ref;
 }
 
 sub log_line {
     my $self = shift;
-    my ($env,$res,$length,$reqtime,$time) = @_;
-    my $log = $self->{log_handler}->($self,$env,$res,$length,$reqtime,$time);
-    $log . "\n";
+    $self->[0]->(@_) . "\n";
+}
+
+sub code {
+    my $self = shift;
+    $self->[1];
+}
+
+sub code_ref {
+    my $self = shift;
+    $self->[0];
 }
 
 1;
@@ -332,11 +292,6 @@ Any single letter can be used, other than those already defined by Apache::LogFo
 Your sub is called with two or three arguments: the content inside the C<{}>
 from the format (block_handlers only), the PSGI environment (C<$env>),
 and the ArrayRef of the response. It should return the string to be logged.
-
-=head1 RECOMMENDED MODULE
-
-If L<POSIX::strftime::GNU> is available, Apache::LogFormat::Compiler uses it. 
-It's good for Windows and old Unices have limited strftime's formatting.
 
 =head1 AUTHOR
 
