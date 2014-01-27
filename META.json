@@ -44,11 +44,9 @@
       "runtime" : {
          "requires" : {
             "POSIX" : "0",
+            "POSIX::strftime::Compiler" : "0.30",
             "Time::Local" : "0",
             "perl" : "5.008004"
-         },
-         "suggests" : {
-            "POSIX::strftime::GNU" : "0"
          }
       },
       "test" : {

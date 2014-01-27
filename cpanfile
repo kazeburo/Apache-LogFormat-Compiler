@@ -1,8 +1,7 @@
 requires 'POSIX';
 requires 'Time::Local';
 requires 'perl', '5.008004';
-
-suggests 'POSIX::strftime::GNU';
+requires 'POSIX::strftime::Compiler', '0.30';
 
 on test => sub {
     requires 'HTTP::Request::Common';
