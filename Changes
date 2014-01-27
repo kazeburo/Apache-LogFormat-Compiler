@@ -2,6 +2,10 @@ Revision history for Perl extension Apache::LogFormat::Compiler
 
 {{$NEXT}}
 
+0.24 2014-01-27T03:12:16Z
+
+   - [TRIAL] switch to using POSIX::strftime::Compiler
+
 0.23 2014-01-16T15:53:09Z
 
    - fixed POSIX::setlocale fails on system without locales (Android) #6 (Thank you dex4er)

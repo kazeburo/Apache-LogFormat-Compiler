@@ -23,3 +23,7 @@ README
 !Build/
 !META.json
 extlib-1.0022/
+nytprof/
+eg/sample.pl
+nytprof.out
+
