@@ -87,6 +87,10 @@ Compile a log format string to perl-code. For faster generation of access\_log l
             $app
         };
 
+# ABOUT POSIX::strftime::Compiler
+
+This module uses [POSIX::strftime::Compiler](http://search.cpan.org/perldoc?POSIX::strftime::Compiler) for generate datetime string. POSIX::strftime::Compiler provides GNU C library compatible strftime(3). But this module will not affected by the system locale. This feature is useful when you want to write loggers, servers and portable applications.
+
 # ADD CUSTOM FORMAT STRING
 
 Apache::LogFormat::Compiler allows one to add a custom format string
