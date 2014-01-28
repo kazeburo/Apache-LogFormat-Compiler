@@ -2,6 +2,11 @@ Revision history for Perl extension Apache::LogFormat::Compiler
 
 {{$NEXT}}
 
+0.30 2014-01-28T07:59:07Z
+
+   - add docs abount POSIX::strftime::Compiler
+   - non trial release
+
 0.24 2014-01-27T03:12:16Z
 
    - [TRIAL] switch to using POSIX::strftime::Compiler
