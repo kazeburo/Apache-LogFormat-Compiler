@@ -2,7 +2,7 @@ package Apache::LogFormat::Compiler;
 
 use strict;
 use warnings;
-use 5.008004;
+use 5.008001;
 use Carp;
 use POSIX::strftime::Compiler qw//;
 use constant {

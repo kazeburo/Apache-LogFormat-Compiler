@@ -1,6 +1,6 @@
 requires 'POSIX';
 requires 'Time::Local';
-requires 'perl', '5.008004';
+requires 'perl', '5.008001';
 requires 'POSIX::strftime::Compiler', '0.30';
 
 on test => sub {
