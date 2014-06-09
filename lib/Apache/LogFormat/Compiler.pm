@@ -13,7 +13,7 @@ use constant {
     TIME => 4,
 };
 
-our $VERSION = '0.30';
+our $VERSION = '0.32';
 
 # copy from Plack::Middleware::AccessLog
 our %formats = (
