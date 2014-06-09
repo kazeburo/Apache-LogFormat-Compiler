@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/kazeburo/Apache-LogFormat-Compiler.png?branch=master)](https://travis-ci.org/kazeburo/Apache-LogFormat-Compiler)
 # NAME
 
 Apache::LogFormat::Compiler - Compile a log format string to perl-code 
@@ -25,7 +26,7 @@ Compile a log format string to perl-code. For faster generation of access\_log l
 
     Takes a format string (or a preset template `combined` or `custom`)
     to specify the log format. This module implements a subset of
-    [Apache's LogFormat templates](http://httpd.apache.org/docs/2.0/mod/mod\_log\_config.html):
+    [Apache's LogFormat templates](http://httpd.apache.org/docs/2.0/mod/mod_log_config.html):
 
         %%    a percent sign
         %h    REMOTE_ADDR from the PSGI environment, or -
@@ -89,7 +90,7 @@ Compile a log format string to perl-code. For faster generation of access\_log l
 
 # ABOUT POSIX::strftime::Compiler
 
-This module uses [POSIX::strftime::Compiler](http://search.cpan.org/perldoc?POSIX::strftime::Compiler) for generate datetime string. POSIX::strftime::Compiler provides GNU C library compatible strftime(3). But this module will not affected by the system locale. This feature is useful when you want to write loggers, servers and portable applications.
+This module uses [POSIX::strftime::Compiler](https://metacpan.org/pod/POSIX::strftime::Compiler) for generate datetime string. POSIX::strftime::Compiler provides GNU C library compatible strftime(3). But this module will not affected by the system locale. This feature is useful when you want to write loggers, servers and portable applications.
 
 # ADD CUSTOM FORMAT STRING
 
@@ -124,7 +125,7 @@ Masahiro Nagano <kazeburo@gmail.com>
 
 # SEE ALSO
 
-[Plack::Middleware::AccessLog](http://search.cpan.org/perldoc?Plack::Middleware::AccessLog), [http://httpd.apache.org/docs/2.2/mod/mod\_log\_config.html](http://httpd.apache.org/docs/2.2/mod/mod\_log\_config.html)
+[Plack::Middleware::AccessLog](https://metacpan.org/pod/Plack::Middleware::AccessLog), [http://httpd.apache.org/docs/2.2/mod/mod\_log\_config.html](http://httpd.apache.org/docs/2.2/mod/mod_log_config.html)
 
 # LICENSE
 
