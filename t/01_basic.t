@@ -65,6 +65,22 @@ use Apache::LogFormat::Compiler;
         qr!^GET /foo \?bar=baz HTTP/1\.1$!
 };
 
+{
+    my $log_handler = Apache::LogFormat::Compiler->new(
+        '%m %U %q %H %I'
+    );
+    ok($log_handler);
+    my $log = $log_handler->log_line(
+        t::Req2PSGI::req_to_psgi(GET "/foo?bar=baz", Foo => 'Bar'),
+        [200,[],[q!OK!]],
+        2,
+        1_000_000,
+        time()
+    );
+    like $log, 
+        qr!^GET /foo \?bar=baz HTTP/1\.1 33$!
+};
+
 
 done_testing();
 

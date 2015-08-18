@@ -2,6 +2,8 @@ Revision history for Perl extension Apache::LogFormat::Compiler
 
 {{$NEXT}}
 
+   - add %I formatter (Arthur Axel fREW Schmidt)
+
 0.32 2014-06-09T02:00:15Z
 
    - change perl version requirements to 5.8.1
