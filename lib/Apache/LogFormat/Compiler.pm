@@ -5,6 +5,8 @@ use warnings;
 use 5.008001;
 use Carp;
 use POSIX::strftime::Compiler qw//;
+use List::Util ();
+
 use constant {
     ENVS => 0,
     RES => 1,
@@ -86,6 +88,21 @@ our %char_handler = (
     b => q!(defined $_[LENGTH] ? $_[LENGTH] : '-')!,
     T => q!(defined $_[REQTIME] ? int($_[REQTIME]*1_000_000) : '-')!,
     D => q!(defined $_[REQTIME] ? $_[REQTIME] : '-')!,
+    O => q!
+        List::Util::sum(
+        # We can't really know what string the server will add on as a string, so
+        # let's just guess
+        #   NOTE: if we *really* want to get it right we could grab
+        #   https://metacpan.org/source/KAZEBURO/Gazelle-0.25/lib/Plack/Handler/Gazelle.xs#L73-130,
+        #   which I'm guessing is nearly the same everywhere
+            10,
+            map length $_, @{$_[RES]->[1]},
+            # `: ` is two characters, but it happens every other item in the list
+            # so our bytes are 2 * $x / 2 == $x
+            scalar @{$_[RES]->[1]},
+            $_[LENGTH] || 0,
+        )
+!,
     v => q!($_[ENVS]->{SERVER_NAME} || '-')!,
     V => q!($_[ENVS]->{HTTP_HOST} || $_[ENVS]->{SERVER_NAME} || '-')!,
     p => q!$_[ENVS]->{SERVER_PORT}!,
@@ -222,6 +239,7 @@ L<Apache's LogFormat templates|http://httpd.apache.org/docs/2.0/mod/mod_log_conf
    %U    PATH_INFO from the PSGI environment
    %q    QUERY_STRING from the PSGI environment
    %H    SERVER_PROTOCOL from the PSGI environment
+   %O    Bytes sent, including headers. Cannot be zero.
 
 In addition, custom values can be referenced, using C<%{name}>,
 with one of the mandatory modifier flags C<i>, C<o> or C<t>:
