@@ -31,6 +31,18 @@ use Apache::LogFormat::Compiler;
         qr!^[a-z0-9\.]+ - - \[\d{2}/\w{3}/\d{4}:\d{2}:\d{2}:\d{2} [+\-]\d{4}\] "GET / HTTP/1\.1" 200 2 "-" "-" -$!;
 };
 
+{
+    my $log_handler = Apache::LogFormat::Compiler->new(
+        '%O'
+    );
+    ok($log_handler);
+    my $log = $log_handler->log_line(
+        t::Req2PSGI::req_to_psgi(GET "/"),
+        [200,[content_type => 'text/plain'],[q!OK!]],
+        2,
+    );
+    like $log, qr!^34$!;
+};
 
 {
     my $log_handler = Apache::LogFormat::Compiler->new(

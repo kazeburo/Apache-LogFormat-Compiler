@@ -1,5 +1,6 @@
 requires 'POSIX';
 requires 'Time::Local';
+requires 'List::Util'; # comes with required version of perl
 requires 'perl', '5.008001';
 requires 'POSIX::strftime::Compiler', '0.30';
 
