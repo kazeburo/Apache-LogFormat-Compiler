@@ -5,6 +5,8 @@ use warnings;
 use 5.008001;
 use Carp;
 use POSIX::strftime::Compiler qw//;
+use List::Util ();
+
 use constant {
     ENVS => 0,
     RES => 1,
@@ -94,6 +96,25 @@ our %char_handler = (
     U => q!_safe($_[ENVS]->{PATH_INFO})!,
     q => q!(($_[ENVS]->{QUERY_STRING} ne '') ? '?' . _safe($_[ENVS]->{QUERY_STRING}) : '' )!,
     H => q!$_[ENVS]->{SERVER_PROTOCOL}!,
+    I => q!
+        List::Util::sum(
+            1 + length $_[ENVS]->{REQUEST_METHOD},
+            # ... `/foo_bar_baz?bing=bong HTTP/1.1`
+            9 + length $_[ENVS]->{REQUEST_URI},
+            # Note that ->length is undocumented and is likely to not work in all
+            # servers
+            defined $_[ENVS]->{CONTENT_LENGTH}
+                ? $_[ENVS]->{CONTENT_LENGTH}
+                : $_[ENVS]->{'psgi.input'}->can('length')
+                    ? $_[ENVS]->{'psgi.input'}->length
+                    : 0,
+            map {
+                # -5 -> don't count HTTP_
+                # +2 -> `: `
+                2 - 5 + length($_) + length($_[ENVS]->{$_})
+            } grep m/^HTTP_/, keys %{$_[ENVS]}
+        )
+    !,
 
 );
 
@@ -222,6 +243,7 @@ L<Apache's LogFormat templates|http://httpd.apache.org/docs/2.0/mod/mod_log_conf
    %U    PATH_INFO from the PSGI environment
    %q    QUERY_STRING from the PSGI environment
    %H    SERVER_PROTOCOL from the PSGI environment
+   %I    Bytes received, including request and headers. Cannot be zero.
 
 In addition, custom values can be referenced, using C<%{name}>,
 with one of the mandatory modifier flags C<i>, C<o> or C<t>:
