@@ -65,6 +65,23 @@ use Apache::LogFormat::Compiler;
         qr!^GET /foo \?bar=baz HTTP/1\.1$!
 };
 
+{
+    my $log_handler = Apache::LogFormat::Compiler->new(
+        '%{this-IS-a_test}e'
+    );
+    ok($log_handler);
+    my $env = t::Req2PSGI::req_to_psgi(GET "/foo?bar=baz");
+    $env->{'this-IS-a_test'} = "accesing env now";
+    my $log = $log_handler->log_line(
+        $env,
+        [200,[],[q!OK!]],
+        2,
+        1_000_000,
+        time()
+    );
+    like $log, qr!^accesing env now$!
+};
+
 
 done_testing();
 
