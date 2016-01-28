@@ -84,7 +84,7 @@ our %char_handler = (
                        " " . $_[ENVS]->{SERVER_PROTOCOL}!,
     s => q!$_[RES]->[0]!,
     b => q!(defined $_[LENGTH] ? $_[LENGTH] : '-')!,
-    T => q!(defined $_[REQTIME] ? int($_[REQTIME]*1_000_000) : '-')!,
+    T => q!(defined $_[REQTIME] ? int($_[REQTIME]/1_000_000) : '-')!,
     D => q!(defined $_[REQTIME] ? $_[REQTIME] : '-')!,
     v => q!($_[ENVS]->{SERVER_NAME} || '-')!,
     V => q!($_[ENVS]->{HTTP_HOST} || $_[ENVS]->{SERVER_NAME} || '-')!,
