@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/kazeburo/Apache-LogFormat-Compiler.png?branch=master)](https://travis-ci.org/kazeburo/Apache-LogFormat-Compiler)
+[![Build Status](https://travis-ci.org/kazeburo/Apache-LogFormat-Compiler.svg?branch=master)](https://travis-ci.org/kazeburo/Apache-LogFormat-Compiler)
 # NAME
 
 Apache::LogFormat::Compiler - Compile a log format string to perl-code 
