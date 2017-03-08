@@ -2,6 +2,10 @@ Revision history for Perl extension Apache::LogFormat::Compiler
 
 {{$NEXT}}
 
+0.35 2017-03-08T04:10:07Z
+
+   - fixed test. load module from relative path.
+
 0.34 2017-03-07T03:18:42Z
 
    - re package with Minilla v3

@@ -71,7 +71,7 @@
          "web" : "https://github.com/kazeburo/Apache-LogFormat-Compiler"
       }
    },
-   "version" : "0.34",
+   "version" : "0.35",
    "x_contributors" : [
       "Florian Schlichting <fsfs@debian.org>",
       "Piotr Roszatycki <piotr.roszatycki@gmail.com>",
