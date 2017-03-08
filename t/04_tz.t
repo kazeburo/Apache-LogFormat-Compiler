@@ -4,7 +4,8 @@ use Test::More;
 use POSIX;
 use Time::Local;
 use Test::MockTime qw/set_fixed_time restore_time/;
-use t::Req2PSGI;
+require "./t/Req2PSGI.pm";
+t::Req2PSGI->import();
 use Apache::LogFormat::Compiler;
 use HTTP::Request::Common;
 

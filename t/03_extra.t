@@ -1,7 +1,8 @@
 use strict;
 use warnings;
 use HTTP::Request::Common;
-use t::Req2PSGI;
+require "./t/Req2PSGI.pm";
+t::Req2PSGI->import();
 use Test::More;
 use Apache::LogFormat::Compiler;
 
