@@ -8,6 +8,7 @@ require "./t/Req2PSGI.pm";
 t::Req2PSGI->import();
 use Apache::LogFormat::Compiler;
 use HTTP::Request::Common;
+use Try::Tiny;
 
 sub time_difference {
     my $now = time();
@@ -31,6 +32,8 @@ my @timezones = (
     ['Europe/London', '+0000','+0100','+0100','+0000'],
     ['America/New_York','-0500', '-0400', '-0400', '-0500']
 );
+
+try { POSIX::tzset } catch { plan skip_all => 'POSIX::tzset not implemented on this architecture' };
 
 for my $timezones (@timezones) {
     my ($timezone, @tz) = @$timezones;
