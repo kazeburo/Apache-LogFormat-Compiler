@@ -76,7 +76,7 @@ my $block_handler = sub {
 
 our %char_handler = (
     '%' => q!'%'!,
-    h => q!($_[ENVS]->{REMOTE_ADDR} || '-')!,
+    h => q!($_[ENVS]->{REMOTE_ADDR} || $_[ENVS]->{HTTP_X_REAL_IP} || '-')!,
     l => q!'-'!,
     u => q!($_[ENVS]->{REMOTE_USER} || '-')!,
     t => q!'[' . $t . ']'!,
