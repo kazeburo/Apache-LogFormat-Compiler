@@ -3,6 +3,8 @@ requires 'Time::Local';
 requires 'perl', '5.008001';
 requires 'POSIX::strftime::Compiler', '0.30';
 
+configure_requires 'Module::Build::Tiny' => '0.039';
+
 on test => sub {
     requires 'HTTP::Request::Common';
     requires 'Test::More', '0.98';
