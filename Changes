@@ -1,6 +1,7 @@
 Revision history for Perl extension Apache::LogFormat::Compiler
 
 {{$NEXT}}
+   - Add direct $env access via %{FOO}e (Thank you Arthur Axel fREW Schmidt)
 
 0.36 2019-11-16T14:34:08Z
 

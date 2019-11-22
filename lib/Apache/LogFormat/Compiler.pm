@@ -64,6 +64,8 @@ my $block_handler = sub {
         $cb =  q!_string(header_get($_[RES]->[1],'!.$block.q!'))!;
     } elsif ($type eq 't') {
         $cb =  q!"[" . POSIX::strftime::Compiler::strftime('!.$block.q!', @lt) . "]"!;
+    } elsif ($type eq 'e') {
+        $cb =  q!_string($_[ENVS]->{'!.$block.q!'})!;
     } elsif (exists $extra->{$type}) {
         $cb =  q!_string($extra_block_handlers->{'!.$type.q!'}->('!.$block.q!',$_[ENVS],$_[RES],$_[LENGTH],$_[REQTIME]))!;
     } else {
@@ -229,6 +231,7 @@ with one of the mandatory modifier flags C<i>, C<o> or C<t>:
    %{variable-name}i    HTTP_VARIABLE_NAME value from the PSGI environment
    %{header-name}o      header-name header in the response
    %{time-format]t      localtime in the specified strftime format
+   %{env-access}e       direct access to any value in the PSGI environment
 
 =item log_line($env:HashRef, $res:ArrayRef, $length:Integer, $reqtime:Integer, $time:Integer): $log:String
 
